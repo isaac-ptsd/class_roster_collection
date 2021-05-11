@@ -5,6 +5,7 @@ import csv
 import time
 from datetime import datetime as dt
 
+
 sheet_key = '1UM5mDB_FAgJc_LFpVqi7KID9YP1EBTEx_cYD8N12H1I'  # class roster
 # authorize, and open a google spreadsheet
 gc = gspread.oauth()
@@ -16,9 +17,19 @@ def gen_list_of_dicts():
     # pulling all data from the spreadsheet with one API call
     return worksheet.get_all_records()  # spreadsheet data saved as a list of dictionaries
 
-# # func to strip non-numeric from SchlCrsID
-# def remove_non_num_schlcrsid(list_of_dicts_in):
 
+def alpha_stripper(string_in):
+    # returns a string with all alpha characters stripped
+    return ''.join(c for c in string_in if c.isdigit())
+
+
+def remove_alphas_schlcrsid(list_of_dicts_in):
+    cell_list = worksheet.range('E2:E' + str(worksheet.row_count))
+    stripped_SchlCrsID = [alpha_stripper(student["SchlCrsID"]) for student in list_of_dicts_in]
+    for i, val in enumerate(stripped_SchlCrsID):
+        cell_list[i].value = val
+    worksheet.update_cells(cell_list)
+    print("All alpha chars removed from SchlCrsID")
 
 
 # func to merg IUID collection w/ class_roster - need pull IUID value from IUID collection, add to ChkDigitInstrctUnitID
@@ -30,4 +41,3 @@ if __name__ == '__main__':
     dics = gen_list_of_dicts()
     print(dics)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
