@@ -20,7 +20,7 @@ def gen_list_of_dicts():
 
 def alpha_stripper(string_in):
     # returns a string with all alpha characters stripped
-    return ''.join(c for c in string_in if c.isdigit())
+    return ''.join(c for c in str(string_in) if c.isdigit())
 
 
 def remove_alphas_schlcrsid(list_of_dicts_in):
@@ -33,11 +33,34 @@ def remove_alphas_schlcrsid(list_of_dicts_in):
 
 
 # func to merg IUID collection w/ class_roster - need pull IUID value from IUID collection, add to ChkDigitInstrctUnitID
+def merge_iuid_w_class_roster(in_sheet_key_iuid):
+
+    # iuid_sect_course_school = {
+    #   "iuid": 123456
+    #   "school": 370
+    #   "section": "100",
+    #   "course":  cr101,
+    # }
+
+    iuid_sh: Spreadsheet = gc.open_by_key(in_sheet_key_iuid)
+    iuid_worksheet = iuid_sh.sheet1
+    iuid_school_sect_course = [{}]
+    for row in iuid_worksheet:
+        iuid_school_sect_course.append({
+            'iuid': row["ChkDigitInstrctUnitID"],
+            'school': row["SchlInstID"],
+            'section': row["SchlSectID"],
+            'course': row["SchlCrsID"]
+        })
+
+
+
 
 # func to find courses missing classroom numbers
 
 
 if __name__ == '__main__':
-    dics = gen_list_of_dicts()
-    print(dics)
+    dicts = gen_list_of_dicts()
+    remove_alphas_schlcrsid(dicts)
+
 
