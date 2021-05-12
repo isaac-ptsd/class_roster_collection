@@ -40,14 +40,6 @@ def remove_alphas_schlcrsid(list_of_dicts_in):
 
 # func to merg IUID collection w/ class_roster - need pull IUID value from IUID collection, add to ChkDigitInstrctUnitID
 def merge_iuid_w_class_roster(in_sheet_key_iuid, list_of_dicts_in):
-
-    # iuid_sect_course_school = {
-    #   "iuid": 123456
-    #   "school": 370
-    #   "section": "100",
-    #   "course":  cr101,
-    # }
-
     iuid_sh: Spreadsheet = gc.open_by_key(in_sheet_key_iuid)
     iuid_worksheet = iuid_sh.sheet1
     iuid_school_sect_course = []
@@ -76,15 +68,55 @@ def merge_iuid_w_class_roster(in_sheet_key_iuid, list_of_dicts_in):
 def find_missing_iuid(cr_list_of_dicts_in):
     missing_iuid_list = [row for row in cr_list_of_dicts_in if row["ChkDigitInstrctUnitID"] == '']
     # filter to unique: schoolid, section, course
-    school_section_course = set([(row["SchlInstID"], row["SchlSectID"], row["CrsCd"]) for row in missing_iuid_list])
-    print(school_section_course)
+    return set([(row["SchlInstID"], row["SchlSectID"], row["CrsCd"]) for row in missing_iuid_list])
 
 
 # func to find courses missing classroom numbers
+def find_courses_missing_classnum(list_of_dicts_in):
+    return [ele for ele in list_of_dicts_in if ele["ClsRmID"]]
+
+
+def add_wsheet(data_in, sheet_name, email_in='isaac.stoutenburgh@phoenix.k12.or.us'):
+    """
+    :param data_in: List of dictionaries
+    :param sheet_name: String
+    :param email_in: String: defaults to 'isaac.stoutenburgh@phoenix.k12.or.us'
+    :return: No return value
+             Will add a new worksheet to the spreadsheet
+    """
+    if not data_in:
+        print("add_wsheet: data_in is empty; will not attempt to add to worksheet")
+    else:
+        try:
+            if data_in[0]:
+                headers = list(data_in[0].keys())
+            else:
+                headers = list(data_in.keys())
+            # +1 fixes bug when data_in has only one record
+            sheet = sh.add_worksheet(sheet_name, len(data_in) + 1, len(headers))
+            sheet.append_row(headers)
+            last_cell = gspread.utils.rowcol_to_a1(len(data_in), len(headers))
+            cell_range = sheet.range('A2:' + last_cell)
+            flattened_test_data = []
+            for row in data_in:
+                for column in headers:
+                    flattened_test_data.append(row[column])
+            for i, cell in enumerate(cell_range):
+                cell.value = flattened_test_data[i]
+            sheet.update_cells(cell_range)
+        except TypeError as e:
+            print("Worksheet not created - no data", e)
+        except IndexError as e:
+            print("\nERROR in function: add_wsheet ", e)
+        except gspread.exceptions.APIError as e:
+            print("ERROR ADDING WORKSHEET: ", e)
+
 
 if __name__ == '__main__':
     cr_dicts = gen_list_of_dicts(course_roster_worksheet)
 
     # remove_alphas_schlcrsid(cr_dicts)
     # merge_iuid_w_class_roster("1fR2e7oLFPRAO1Re9oiUTRvJJid8UmJjzqY5NJSs3ELw", cr_dicts)
-    find_missing_iuid(cr_dicts)
+    print(len(find_missing_iuid(cr_dicts)))
+    # print(find_courses_missing_classnum(cr_dicts))
+
