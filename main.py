@@ -29,9 +29,25 @@ def alpha_stripper(string_in):
     return ''.join(c for c in str(string_in) if c.isdigit())
 
 
+#TODO: can't just strip alphas need to use a case statement or something; K1 -> KG,
+# also can't strip alphas from PHS courses
 def remove_alphas_schlcrsid(list_of_dicts_in):
+    # note: if course == 'K1', change to 'KG'
     cell_list = course_roster_worksheet.range('E2:E' + str(course_roster_worksheet.row_count))
     stripped_SchlCrsID = [alpha_stripper(student["SchlCrsID"]) for student in list_of_dicts_in]
+    for student in list_of_dicts_in:
+        if student["SchlCrsID"] == 'k1':
+            student["SchlCrsID"] = 'KG'
+        if student["SchlCrsID"] == 'e1':
+            student["SchlCrsID"] = '1'
+        if student["SchlCrsID"] == 'e2':
+            student["SchlCrsID"] = '2'
+        if student["SchlCrsID"] == 'e3':
+            student["SchlCrsID"] = '3'
+        if student["SchlCrsID"] == 'e4':
+            student["SchlCrsID"] = '4'
+        if student["SchlCrsID"] == 'e5':
+            student["SchlCrsID"] = '5'
     for i, val in enumerate(stripped_SchlCrsID):
         cell_list[i].value = val
     course_roster_worksheet.update_cells(cell_list)
@@ -68,7 +84,7 @@ def merge_iuid_w_class_roster(in_sheet_key_iuid, list_of_dicts_in):
 def find_missing_iuid(cr_list_of_dicts_in):
     missing_iuid_list = [row for row in cr_list_of_dicts_in if row["ChkDigitInstrctUnitID"] == '']
     # filter to unique: schoolid, section, course
-    return set([(row["SchlInstID"], row["SchlSectID"], row["CrsCd"]) for row in missing_iuid_list])
+    return set([(row["SchlInstID"], row["SchlSectID"], row["SchlCrsID"]) for row in missing_iuid_list])
 
 
 # func to find courses missing classroom numbers
@@ -115,8 +131,8 @@ def add_wsheet(data_in, sheet_name, email_in='isaac.stoutenburgh@phoenix.k12.or.
 if __name__ == '__main__':
     cr_dicts = gen_list_of_dicts(course_roster_worksheet)
 
-    # remove_alphas_schlcrsid(cr_dicts)
     # merge_iuid_w_class_roster("1fR2e7oLFPRAO1Re9oiUTRvJJid8UmJjzqY5NJSs3ELw", cr_dicts)
-    print(len(find_missing_iuid(cr_dicts)))
-    # print(find_courses_missing_classnum(cr_dicts))
+    # print(find_missing_iuid(cr_dicts))
+    print(find_courses_missing_classnum(cr_dicts))
+    add_wsheet(find_courses_missing_classnum(cr_dicts), "courses missing rooms")
 
