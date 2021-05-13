@@ -55,6 +55,7 @@ def remove_alphas_schlcrsid(list_of_dicts_in):
 
 
 # func to merg IUID collection w/ class_roster - need pull IUID value from IUID collection, add to ChkDigitInstrctUnitID
+# todo: use CrsCd NOT SchlCrsID
 def merge_iuid_w_class_roster(in_sheet_key_iuid, list_of_dicts_in):
     iuid_sh: Spreadsheet = gc.open_by_key(in_sheet_key_iuid)
     iuid_worksheet = iuid_sh.sheet1
@@ -132,7 +133,7 @@ if __name__ == '__main__':
     cr_dicts = gen_list_of_dicts(course_roster_worksheet)
 
     # merge_iuid_w_class_roster("1fR2e7oLFPRAO1Re9oiUTRvJJid8UmJjzqY5NJSs3ELw", cr_dicts)
-    # print(find_missing_iuid(cr_dicts))
-    print(find_courses_missing_classnum(cr_dicts))
-    add_wsheet(find_courses_missing_classnum(cr_dicts), "courses missing rooms")
+    print(len(find_missing_iuid(cr_dicts)))
+    # print(find_courses_missing_classnum(cr_dicts))
+    #add_wsheet(find_courses_missing_classnum(cr_dicts), "courses missing rooms")
 
