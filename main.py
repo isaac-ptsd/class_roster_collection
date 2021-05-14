@@ -133,7 +133,8 @@ if __name__ == '__main__':
     cr_dicts = gen_list_of_dicts(course_roster_worksheet)
 
     # merge_iuid_w_class_roster("1fR2e7oLFPRAO1Re9oiUTRvJJid8UmJjzqY5NJSs3ELw", cr_dicts)
+    print(find_missing_iuid(cr_dicts))
     print(len(find_missing_iuid(cr_dicts)))
     # print(find_courses_missing_classnum(cr_dicts))
-    #add_wsheet(find_courses_missing_classnum(cr_dicts), "courses missing rooms")
+    add_wsheet(find_courses_missing_classnum(cr_dicts), "courses missing rooms")
 
