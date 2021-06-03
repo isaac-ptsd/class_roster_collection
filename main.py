@@ -1,9 +1,6 @@
 import gspread
 from gspread import Spreadsheet
 from gspread import utils
-import csv
-import time
-from datetime import datetime as dt
 
 
 sheet_key = '1UM5mDB_FAgJc_LFpVqi7KID9YP1EBTEx_cYD8N12H1I'  # class roster
@@ -29,7 +26,7 @@ def alpha_stripper(string_in):
     return ''.join(c for c in str(string_in) if c.isdigit())
 
 
-#TODO: can't just strip alphas need to use a case statement or something; K1 -> KG,
+# TODO: can't just strip alphas need to use a case statement or something; K1 -> KG,
 # also can't strip alphas from PHS courses
 def remove_alphas_schlcrsid(list_of_dicts_in):
     # note: if course == 'K1', change to 'KG'
@@ -54,7 +51,7 @@ def remove_alphas_schlcrsid(list_of_dicts_in):
     print("All alpha chars removed from SchlCrsID")
 
 
-# func to merg IUID collection w/ class_roster - need pull IUID value from IUID collection, add to ChkDigitInstrctUnitID
+# func to merg IUID collection w/ class_roster - get IUID value from IUID collection, add to ChkDigitInstrctUnitID
 # todo: use CrsCd NOT SchlCrsID
 def merge_iuid_w_class_roster(in_sheet_key_iuid, list_of_dicts_in):
     iuid_sh: Spreadsheet = gc.open_by_key(in_sheet_key_iuid)
@@ -76,7 +73,8 @@ def merge_iuid_w_class_roster(in_sheet_key_iuid, list_of_dicts_in):
     for record in list_of_dicts_in:
         # iterate through course_record sheet data and find the corresponding IUID from the IUID_collection data
         # using the search() function, building a cell_list of IUID's to be writen to course_recrd sheet
-        cell_list[i].value = search(iuid_school_sect_course, record["SchlInstID"], record["SchlSectID"], record["SchlCrsID"])
+        cell_list[i].value = \
+            search(iuid_school_sect_course, record["SchlInstID"], record["SchlSectID"], record["SchlCrsID"])
         i += 1
     course_roster_worksheet.update_cells(cell_list)
 
@@ -137,4 +135,3 @@ if __name__ == '__main__':
     print(len(find_missing_iuid(cr_dicts)))
     # print(find_courses_missing_classnum(cr_dicts))
     add_wsheet(find_courses_missing_classnum(cr_dicts), "courses missing rooms")
-
