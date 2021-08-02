@@ -3,7 +3,7 @@ from gspread import Spreadsheet
 from gspread import utils
 
 
-sheet_key = '1UM5mDB_FAgJc_LFpVqi7KID9YP1EBTEx_cYD8N12H1I'  # class roster
+sheet_key = '1N-4B26kQSS3eUcwp_Kw3Ues0KUj_tYX4EQahGSdbtCA'  # class roster dev sheet
 # authorize, and open a google spreadsheet
 gc = gspread.oauth()
 sh: Spreadsheet = gc.open_by_key(sheet_key)
@@ -127,11 +127,40 @@ def add_wsheet(data_in, sheet_name, email_in='isaac.stoutenburgh@phoenix.k12.or.
             print("ERROR ADDING WORKSHEET: ", e)
 
 
+def add_sub(cr_list_of_dicts_in):
+    #  need to know:
+    #  * dates sub taught for
+    #  * full time teacher the sub covered for
+
+    sub_name = input("Enter the substitutes name: ")
+    sub_id = input("Enter the substitutes staff id: ")
+    sub_gender = input("Enter the substitutes gender: ")
+    sub_start_date = input("Enter the date the sub started (mmddyyyy): ")
+    sub_end_date = input("Enter the date the sub ended (mmddyyyy): ")
+    teacher_id = input("Enter the teachers staff id of the teacher that the sub is covering for: ")
+
+    print('you entered: ', sub_name, sub_id, sub_gender, sub_start_date, sub_end_date, teacher_id)
+    # look up teacher_id
+    # duplicate rows (x2)
+    # for one set of duplicates replace:
+    # * teacher name
+    # * teacher id
+    # * teacher gender
+    # fix dates
+    # * og teacher rows need end date = sub start date
+    # * new teacher rows need start date = sub end date
+    # all student start end dates must fall within teacher/sub start/end dates
+
+
+
+
 if __name__ == '__main__':
     cr_dicts = gen_list_of_dicts(course_roster_worksheet)
 
     # merge_iuid_w_class_roster("1fR2e7oLFPRAO1Re9oiUTRvJJid8UmJjzqY5NJSs3ELw", cr_dicts)
-    print(find_missing_iuid(cr_dicts))
-    print(len(find_missing_iuid(cr_dicts)))
+    # print(find_missing_iuid(cr_dicts))
+    # print(len(find_missing_iuid(cr_dicts)))
     # print(find_courses_missing_classnum(cr_dicts))
-    add_wsheet(find_courses_missing_classnum(cr_dicts), "courses missing rooms")
+    # add_wsheet(find_courses_missing_classnum(cr_dicts), "courses missing rooms")
+    add_sub(cr_dicts)
+
