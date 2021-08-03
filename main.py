@@ -1,6 +1,9 @@
 import gspread
 from gspread import Spreadsheet
 from gspread import utils
+from gspread_dataframe import set_with_dataframe
+from datetime import datetime as dt
+from pandas import DataFrame
 
 
 sheet_key = '1N-4B26kQSS3eUcwp_Kw3Ues0KUj_tYX4EQahGSdbtCA'  # class roster dev sheet
@@ -127,11 +130,20 @@ def add_wsheet(data_in, sheet_name, email_in='isaac.stoutenburgh@phoenix.k12.or.
             print("ERROR ADDING WORKSHEET: ", e)
 
 
+def mmddyyyy_to_dt_obj(string_in):
+    chars = [char for char in string_in]
+    if len(chars) == 7:
+        date_str = f"0{chars[0]}/{chars[1]}{chars[2]}/{chars[3]}{chars[4]}{chars[5]}{chars[6]}"
+    if len(chars) == 8:
+        date_str = f"{chars[0]}{chars[1]}/{chars[2]}{chars[3]}/{chars[4]}{chars[5]}{chars[6]}{chars[7]}"
+    return dt.strptime(date_str, '%m/%d/%Y').date()
+
+
 def add_sub(cr_list_of_dicts_in):
     #  need to know:
     #  * dates sub taught for
     #  * full time teacher the sub covered for
-
+    #
     sub_name = input("Enter the substitutes name: ")
     sub_id = input("Enter the substitutes staff id: ")
     sub_gender = input("Enter the substitutes gender: ")
@@ -150,6 +162,26 @@ def add_sub(cr_list_of_dicts_in):
     # * og teacher rows need end date = sub start date
     # * new teacher rows need start date = sub end date
     # all student start end dates must fall within teacher/sub start/end dates
+
+    found_tch_list = [ele for ele in cr_list_of_dicts_in if ele["EmplyrStaffID"] == teacher_id]
+    found_tch_df = DataFrame(found_tch_list)
+
+    # update with subs info:
+
+
+    print(found_tch_list)
+    print(found_tch_df)
+
+    # logic paths:
+    # 1) Triple teachers rows if start date and end date more than 10 days from start/end of course
+    #   * update dates and fill in subs info where appropriate
+    # 2) Duplicate rows if start date or end date within 10 days of start/end of course dates
+    #   * update dates and fill in subs info where appropriate
+
+    set_with_dataframe(course_roster_worksheet, found_tch_df, row=len(cr_list_of_dicts_in)+2, col=1, include_column_header=False)
+    date1 = str(found_tch_list[0]["CrsBeginDtTxt"])
+
+    print(mmddyyyy_to_dt_obj(date1) - mmddyyyy_to_dt_obj(sub_start_date))
 
 
 
