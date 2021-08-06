@@ -12,6 +12,17 @@ gc = gspread.oauth()
 sh: Spreadsheet = gc.open_by_key(sheet_key)
 course_roster_worksheet = sh.sheet1
 
+# global variables:
+sub_name = ""
+sub_dob = ""
+sub_staff_id = ""
+sub_ode_id = ""
+sub_last_4_ss = ""
+sub_gender = ""
+sub_start_date = ""
+sub_end_date = ""
+teacher_id = ""
+
 
 def gen_list_of_dicts(worksheet_in):
     # pulling all data from the spreadsheet with one API call
@@ -139,51 +150,68 @@ def mmddyyyy_to_dt_obj(string_in):
     return dt.strptime(date_str, '%m/%d/%Y').date()
 
 
-def add_sub(cr_list_of_dicts_in):
-    #  need to know:
-    #  * dates sub taught for
-    #  * full time teacher the sub covered for
-    #
+def get_sub_info_from_user():
+    # get sub info from user
+    global sub_name
     sub_name = input("Enter the substitutes name: ")
-    sub_id = input("Enter the substitutes staff id: ")
+    global sub_dob
+    sub_dob = input("Enter the substitutes DOB: ")
+    global sub_staff_id
+    sub_staff_id = input("Enter the substitutes district staff id: ")
+    global sub_ode_id
+    sub_ode_id = input("Enter the substitutes ode id: ")
+    global sub_last_4_ss
+    sub_last_4_ss = input("Enter the last 4 digits of the substitutes SS#: ")
+    global sub_gender
     sub_gender = input("Enter the substitutes gender: ")
+    global sub_start_date
     sub_start_date = input("Enter the date the sub started (mmddyyyy): ")
+    global sub_end_date
     sub_end_date = input("Enter the date the sub ended (mmddyyyy): ")
-    teacher_id = input("Enter the teachers staff id of the teacher that the sub is covering for: ")
+    global teacher_id
+    teacher_id= input("Enter the teachers staff id of the teacher that the sub is covering for: ")
 
-    print('you entered: ', sub_name, sub_id, sub_gender, sub_start_date, sub_end_date, teacher_id)
-    # look up teacher_id
-    # duplicate rows (x2)
-    # for one set of duplicates replace:
-    # * teacher name
-    # * teacher id
-    # * teacher gender
-    # fix dates
-    # * og teacher rows need end date = sub start date
-    # * new teacher rows need start date = sub end date
-    # all student start end dates must fall within teacher/sub start/end dates
 
+def add_sub(cr_list_of_dicts_in):
+    get_sub_info_from_user()
+
+    # search google sheet for teacher substitute covered for:
     found_tch_list = [ele for ele in cr_list_of_dicts_in if ele["EmplyrStaffID"] == teacher_id]
-    found_tch_df = DataFrame(found_tch_list)
+    teacher_df = DataFrame(found_tch_list)
 
-    # update with subs info:
+    # Update with substitutes information:
+    sub_df = teacher_df
+    sub_df["StfLNm"] = sub_name
+    sub_df["StfGndr"] = sub_gender
+    sub_df["StfBirthDtTxt"] = sub_dob
+    sub_df["TchrStrtDtTxt"] = sub_start_date
+    sub_df["TchrEndDtTxt"] = sub_end_date
+    sub_df["EmplyrStaffID"] = sub_staff_id
+    sub_df["ChkDigitStfID"] = sub_ode_id
+    sub_df["StfSSN"] = sub_last_4_ss
 
+    # Check and correct student dates in sub_df:
+    for index in sub_df.index:
+        # print(sub_df["StdntStrtDtTxt"][index])
+        if mmddyyyy_to_dt_obj(str(sub_df["StdntStrtDtTxt"][index])) < mmddyyyy_to_dt_obj(sub_start_date):
+            sub_df["StdntStrtDtTxt"][index] = sub_start_date
+        if mmddyyyy_to_dt_obj(str(sub_df["StdntStrtDtTxt"][index])) >= mmddyyyy_to_dt_obj(sub_end_date):
+            sub_df = sub_df.drop([index])
+            break
+        if mmddyyyy_to_dt_obj(str(sub_df["StdntEndDtTxt"][index])) > mmddyyyy_to_dt_obj(sub_end_date):
+            sub_df["StdntEndDtTxt"][index] = sub_end_date
 
-    print(found_tch_list)
-    print(found_tch_df)
+    # write subs dataframe to google sheet
+    set_with_dataframe(course_roster_worksheet, sub_df, row=len(cr_list_of_dicts_in)+2, col=1, include_column_header=False)
 
-    # logic paths:
-    # 1) Triple teachers rows if start date and end date more than 10 days from start/end of course
-    #   * update dates and fill in subs info where appropriate
-    # 2) Duplicate rows if start date or end date within 10 days of start/end of course dates
-    #   * update dates and fill in subs info where appropriate
-
-    set_with_dataframe(course_roster_worksheet, found_tch_df, row=len(cr_list_of_dicts_in)+2, col=1, include_column_header=False)
-    date1 = str(found_tch_list[0]["CrsBeginDtTxt"])
-
-    print(mmddyyyy_to_dt_obj(date1) - mmddyyyy_to_dt_obj(sub_start_date))
-
-
+    # update teachers end date (= sub start date)
+    TchrEndDtTxt_col_num = 23  # column number of the teacher end date in the course_roster_worksheet
+    course_roster_worksheet
+    row_count = course_roster_worksheet.row_count
+    while row_count > 0:
+        row_values = course_roster_worksheet.row_values(row_count, value_render_option='UNFORMATTED_VALUE')
+        if row_values[14] == teacher_id:
+            course_roster_worksheet.update_cell(row_count, TchrEndDtTxt_col_num, sub_start_date)
 
 
 if __name__ == '__main__':
@@ -194,5 +222,7 @@ if __name__ == '__main__':
     # print(len(find_missing_iuid(cr_dicts)))
     # print(find_courses_missing_classnum(cr_dicts))
     # add_wsheet(find_courses_missing_classnum(cr_dicts), "courses missing rooms")
+
     add_sub(cr_dicts)
+
 
